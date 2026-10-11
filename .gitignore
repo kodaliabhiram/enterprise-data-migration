@@ -8,4 +8,6 @@ __pycache__/
 .ipynb_checkpoints/
 # Generated data quality reports
 data/quality_report.json
+# Generated migration output
+data/migrated/
 
