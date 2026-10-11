@@ -1,4 +1,8 @@
+import json
 
+import pytest
+
+from src.validation.data_quality import profile_transactions
 import pandas as pd
 
 from src.validation.data_quality import analyze_transactions
@@ -53,3 +57,51 @@ def test_clean_data_has_no_quality_issues():
     assert report["non_positive_amounts"] == 0
     assert report["unknown_customers"] == 0
     assert report["high_value_transactions"] == 0
+
+def test_missing_required_column_is_rejected():
+    incomplete = pd.DataFrame(
+        {
+            "transaction_id": ["T001"],
+            "customer_id": ["C001"],
+            "amount": [500],
+            "transaction_date": ["2026-10-01"],
+        }
+    )
+
+    with pytest.raises(ValueError, match="Missing required columns"):
+        analyze_transactions(incomplete)
+
+
+def test_json_report_contains_summary_and_findings(tmp_path):
+    source = tmp_path / "transactions.csv"
+    report_file = tmp_path / "quality_report.json"
+
+    sample_transactions().to_csv(source, index=False)
+
+    report = profile_transactions(source, report_file)
+
+    saved_report = json.loads(
+        report_file.read_text(encoding="utf-8")
+    )
+
+    assert saved_report["summary"]["total_records"] == 4
+    assert saved_report["findings"]
+    assert "generated_at_utc" in saved_report
+    assert report == saved_report
+
+
+def test_empty_dataset_is_handled():
+    empty = pd.DataFrame(
+        columns=[
+            "transaction_id",
+            "customer_id",
+            "amount",
+            "transaction_date",
+            "payment_method",
+        ]
+    )
+
+    report = analyze_transactions(empty)
+
+    assert report["total_records"] == 0
+    assert report["findings"] == []
