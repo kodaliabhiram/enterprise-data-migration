@@ -12,6 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.validation.data_quality import analyze_transactions
 from src.ml.anomaly_detector import detect_anomalies
+from src.transformation.migration import migrate_transactions
 
 DATA_FILE = PROJECT_ROOT / "data" / "sample" / "transactions.csv"
 
@@ -32,6 +33,8 @@ def load_transactions():
     return pd.read_csv(DATA_FILE)
 
 df = load_transactions()
+# Run the migration pipeline and capture its reconciliation report.
+migration = migrate_transactions()
 
 # Run the existing data quality checks.
 quality = analyze_transactions(df)
@@ -61,6 +64,22 @@ c4.metric(
     "Anomalies detected",
     int(anomalies["anomaly_label"].eq("anomaly").sum()),
 )
+st.divider()
+
+st.subheader("Data migration reconciliation")
+
+m1, m2, m3 = st.columns(3)
+m1.metric("Source records", migration["source_records"])
+m2.metric("Migrated records", migration["target_records"])
+m3.metric(
+    "Records reconciled",
+    "YES" if migration["records_reconciled"] else "NO",
+)
+
+if migration["status"] == "SUCCESS" and migration["records_reconciled"]:
+    st.success("Migration successful — source and target record counts match.")
+else:
+    st.error("Migration reconciliation failed. Check the migration report.")
 
 st.divider()
 
