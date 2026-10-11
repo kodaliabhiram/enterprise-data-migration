@@ -11,3 +11,6 @@ data/quality_report.json
 # Generated migration output
 data/migrated/
 
+data/anomaly_results.csv
+data/isolation_forest.joblib
+
