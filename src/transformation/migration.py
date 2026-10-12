@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import pandas as pd
-
+from src.validation.migration_audit import record_migration_run
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOURCE = PROJECT_ROOT / "data" / "sample" / "transactions.csv"
@@ -20,6 +20,7 @@ REQUIRED_COLUMNS = {
 def migrate_transactions(
     source_path: Path = DEFAULT_SOURCE,
     target_path: Path = DEFAULT_TARGET,
+    audit_path: Path | None = None,
 ) -> dict:
     """Read, validate, transform, and migrate transaction records."""
 
@@ -77,6 +78,12 @@ def migrate_transactions(
         "records_reconciled": source_count == len(target_check),
         "status": "SUCCESS",
     }
+
+        # Record successful migrations in the audit trail.
+    if audit_path is None:
+        record_migration_run(result)
+    else:
+        record_migration_run(result, audit_path)
 
     print("\n=== DATA MIGRATION REPORT ===")
     for key, value in result.items():

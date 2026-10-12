@@ -48,3 +48,28 @@ def test_migration_rejects_missing_source_file(tmp_path):
 
     with pytest.raises(FileNotFoundError):
         migrate_transactions(source, target)
+
+def test_successful_migration_writes_audit_record(tmp_path):
+    from src.validation.migration_audit import read_migration_history
+
+    source = tmp_path / "source.csv"
+    target = tmp_path / "target.csv"
+    audit = tmp_path / "audit.csv"
+
+    pd.DataFrame({
+        "transaction_id": ["T001"],
+        "customer_id": ["C001"],
+        "amount": [500],
+        "transaction_date": ["2026-10-01"],
+        "payment_method": ["upi"],
+    }).to_csv(source, index=False)
+
+    result = migrate_transactions(source, target, audit)
+
+    history = read_migration_history(audit)
+
+    assert result["status"] == "SUCCESS"
+    assert len(history) == 1
+    assert history.iloc[0]["status"] == "SUCCESS"
+    assert history.iloc[0]["source_records"] == 1
+    assert history.iloc[0]["target_records"] == 1
