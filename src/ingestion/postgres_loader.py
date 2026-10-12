@@ -22,6 +22,20 @@ def load_transactions(csv_path: Path = DEFAULT_CSV) -> dict:
 
    
     df = pd.read_csv(csv_path)
+    required_columns = {
+    "transaction_id",
+    "customer_id",
+    "amount",
+    "transaction_date",
+    "payment_method",
+    }
+
+    missing_columns = sorted(required_columns - set(df.columns))
+
+    if missing_columns:
+        raise ValueError(
+        f"CSV is missing required columns: {missing_columns}"
+    )
 
     # Convert date strings into Python date objects for PostgreSQL.
     df["transaction_date"] = pd.to_datetime(
