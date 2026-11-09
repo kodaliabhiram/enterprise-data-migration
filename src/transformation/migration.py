@@ -78,12 +78,12 @@ def migrate_transactions(
         "records_reconciled": source_count == len(target_check),
         "status": "SUCCESS",
     }
-
-        # Record successful migrations in the audit trail.
+            # Record successful migrations in the audit trail.
     if audit_path is None:
         record_migration_run(result)
     else:
         record_migration_run(result, audit_path)
+
 
     print("\n=== DATA MIGRATION REPORT ===")
     for key, value in result.items():
