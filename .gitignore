@@ -16,3 +16,6 @@ data/isolation_forest.joblib
 
 
 data/migration_audit.csv
+# Uploaded and generated migration files
+data/uploads/
+data/migrated/
